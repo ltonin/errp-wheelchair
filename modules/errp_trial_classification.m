@@ -1,6 +1,6 @@
 clearvars; clc;
 
-subject = 'a5';
+subject = 'c5';
 includepat  = {subject};
 %includepat  = {'errp'};
 excludepat  = {};
@@ -42,8 +42,8 @@ vz = errp_lowpass_velocity(vel(:, 3), SampleRate, 0.5);
 cmdz = cmd(:, 3);
 [joyk, evtJoy] = proc_get_event2([123 987], nnavsamples, navevents.POS, navevents.TYP, 1);
 [vzthidx, joyidx] = find_cmd_latency(vz, joyk, 0.05);
-%latency = vzthidx - joyidx;
-latency = 0;
+latency = vzthidx - joyidx;
+%latency = 0;
 
 %% Downsampling
 do_downsample = true;
@@ -58,6 +58,7 @@ if do_downsample == true
     events.POS = floor(events.POS/DownFactor);
     events.DUR = floor(events.DUR/DownFactor);
     SampleRate = SelectedSamplingRate;
+    latency = floor(latency/SelectedSamplingRate);
 else
     F = P;
     SampleRate = settings.data.samplerate;
@@ -148,7 +149,7 @@ for rId = 1:nruns
 
     % Select features and train model
     [fs, fs_sel_id, fs_sel_val] = select_features(rTrain, kTrain, nfeatures);
-    Model = fitcdiscr(rTrain(:, fs_sel_id), kTrain, 'DiscrimType','quadratic');
+    Model = fitcdiscr(rTrain(:, fs_sel_id), kTrain, 'DiscrimType','linear');
     
     % Train accuracy
     [GkTr, ppTr] = predict(Model, rTrain(:, fs_sel_id));
@@ -240,6 +241,8 @@ end
 hold off;
 grid on;
 axis square;
+xlabel('False positive rate');
+ylabel('True positive rate');
 title(['ROC on trainset - AUC: ' num2str(mean(auc_tr), '%4.2f') '+/-' num2str(std(auc_tr),'%4.2f')]);
 
 
@@ -251,6 +254,8 @@ end
 hold off;
 grid on;
 axis square;
+xlabel('False positive rate');
+ylabel('True positive rate');
 title(['ROC on testset - AUC: ' num2str(mean(auc_te), '%4.2f') '+/-' num2str(std(auc_te),'%4.2f')]);
 
 sgtitle(['subject ' subject])
